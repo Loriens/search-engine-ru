@@ -1,6 +1,7 @@
 // Определения функций, пространств имен и т.д.
 
 #include <iostream>
+#include <vector>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include "head.h"
@@ -10,19 +11,19 @@ using namespace std;
 using boost::property_tree::ptree;
 using boost::property_tree::write_json;
 
-void search_engine(boost::filesystem::path main_path, bool first_call) {	
+void search_engine(boost::filesystem::path main_path, bool first_call, string name_file) {	
 	if (boost::filesystem::exists(main_path)) {
 
 		ofstream fileout; // Поток для вывода в файл
 
 		if (first_call) {
-			fileout.open("File JSON.txt", ios_base::out | ios_base::trunc); //(имя файла, открыть файл для записи и очистить его)
-			fileout << "Path: " + main_path.string()
+			fileout.open(name_file, ios_base::out | ios_base::trunc); //(имя файла, открыть файл для записи и очистить его)
+			fileout << main_path.string()
 				<< endl
 				<< endl;
 		}
 		else {
-			fileout.open("File JSON.txt", ios_base::out | ios_base::in | ios_base::app); // (имя файла, открыть файл для записи и добавлять в конец файла)
+			fileout.open(name_file, ios_base::out | ios_base::in | ios_base::app); // (имя файла, открыть файл для записи и добавлять в конец файла)
 		}
 
 		boost::filesystem::directory_iterator end_iter;
@@ -59,9 +60,9 @@ void search_engine(boost::filesystem::path main_path, bool first_call) {
 				else if (boost::filesystem::is_directory(der_iter->path())) {
 					fileout.close(); // Закрываем файл
 
-					search_engine(der_iter->path(), false);
+					search_engine(der_iter->path(), false, name_file);
 
-					fileout.open("File JSON.txt", ios_base::out | ios_base::in | ios_base::app); // Открываем файл
+					fileout.open(name_file, ios_base::out | ios_base::in | ios_base::app); // Открываем файл
 				}
 				else {
 					cout << der_iter->path()
@@ -73,7 +74,7 @@ void search_engine(boost::filesystem::path main_path, bool first_call) {
 		fileout.close(); // Закрываем файл
 
 		if (first_call) {
-			cout << "Task has completed!"
+			cout << "Задача завершена!"
 				<< endl;
 		}
 	}
@@ -91,6 +92,91 @@ string hash_sha1(const char * hash_str, int length) {
 	return hexstring;
 	delete[] hash;
 	delete[] hexstring;
+}
+
+void search_changes(string name_file) {
+	ifstream file_in; // Поток для ввода из файла
+	file_in.open(name_file); // Открываем файл для чтения
+
+	boost::filesystem::path main_path; // Путь к каталогу
+	string str;
+	vector<string> files_path; // Путь к файлам
+	vector<string> files_hash; // Хэш файлов
+	vector<string> files_path_copy;
+	vector<string> files_hash_copy;
+
+	getline(file_in, str);
+	main_path = str;
+	cout << "Проверяем файл "
+		<< str
+		<< endl;
+	getline(file_in, str);
+	while (getline(file_in, str)) { // Достаём значения из старой проверки каталога
+		ptree pt;
+		istringstream is(str);
+		read_json(is, pt);
+		string value;
+		value = pt.get<string>("Path");
+		files_path.push_back(value);
+		value = pt.get<string>("Hash");
+		files_hash.push_back(value);
+
+		getline(file_in, str);
+	}
+
+	file_in.close(); // Закрываем файл. Очень важно!
+
+	search_engine(main_path, 1, "File JSON copy.txt"); // Проводим новую проверку каталога
+	file_in.open("File JSON copy.txt"); // Открываем файл для чтения
+
+	getline(file_in, str);
+	getline(file_in, str);
+	while (getline(file_in, str)) { // Достаём значения из новой проверки каталога
+		ptree pt;
+		istringstream is(str);
+		read_json(is, pt);
+		string value;
+		value = pt.get<string>("Path");
+		files_path_copy.push_back(value);
+		value = pt.get<string>("Hash");
+		files_hash_copy.push_back(value);
+
+		getline(file_in, str);
+	}
+
+	file_in.close(); // Закрываем файл. Очень важно!
+
+	cout << endl
+		<< endl
+		<< "Изменились файлы: "
+		<< endl;
+	for (int i = 0; i < files_path.size(); i++) { // Проверяем все файлы на изменения
+		for (int x = 0; x < files_path_copy.size(); x++) {
+			if (files_path[i] == files_path_copy[x]) {
+				if (files_hash[i] != files_hash_copy[x])
+					cout << files_path[i]
+					<< endl;
+				files_path_copy[x] = "";
+				files_path[i] = "";
+			}
+		}
+	}
+	cout << endl
+		<< "Удалили файлы: "
+		<< endl;
+	for (int i = 0; i < files_path.size(); i++) {
+		if (files_path[i] != "")
+			cout << files_path[i]
+			<< endl;
+	}
+	cout << endl
+		<< "Новые файлы: "
+		<< endl;
+	for (int i = 0; i < files_path_copy.size(); i++) {
+		if (files_path_copy[i] != "")
+			cout << files_path_copy[i]
+			<< endl;
+	}
 }
 
 /*

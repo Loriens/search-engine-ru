@@ -10,7 +10,7 @@ Dialog::Dialog(QWidget *parent) :
     connect(ui->buttonBox->button(QDialogButtonBox::Ok), SIGNAL(clicked()), SLOT(okClicked()));
     connect(ui->buttonBox->button(QDialogButtonBox::Cancel), SIGNAL(clicked()), SLOT(close()));
     setWindowTitle("Read serialization");
-    ui->lineEdit->setText("C:/Users/Asus/Documents/Visual Studio 2013/Projects/Task_SPbGU/Task_SPbGU/for_qt.txt");
+    ui->lineEdit->setText("C:/Users/Asus/Documents/Visual Studio 2013/Projects/Task_SPbGU/Task_SPbGU/File JSON.txt");
 }
 
 void Dialog::okClicked()

@@ -20,17 +20,17 @@ void Paint::paintEvent(QPaintEvent *e)
 
     QRect rec(250, 10, 250, 50);
     painter.drawRect(rec);
-    painter.drawText(rec, Qt::AlignCenter, "Folder path: " + allSites[0]);
+    painter.drawText(rec, Qt::AlignCenter, "Folder path: " + Path);
 
     int x = 10;
     int y = 100;
-    for (int i = 2; i < allSites.size(); i++)
+    for (int i = 0; i < allFiles.size(); i++)
     {
         QRect rec(x, y, 250, 25);
         painter.drawRect(rec);
-        painter.drawText(rec, Qt::AlignCenter, allSites[i]);
+        painter.drawText(rec, Qt::AlignCenter, allFiles[i].value("Path").toString() + " (size: " + allFiles[i].value("Size").toString() + ")");
 
-        if ((i - 1) % 5 == 0)
+        if ((i + 1) % 4 == 0)
         {
             x = 10;
             y += 75;

@@ -5,6 +5,7 @@
 #include <QtGui>
 #include <QDialog>
 #include <QtCore>
+#include <QJsonObject>
 
 namespace Ui {
 class Paint;
@@ -16,7 +17,8 @@ class Paint : public QDialog
 
 public:
     explicit Paint(QWidget *parent = 0);
-    std::vector<QString> allSites;// Вектор, в котором хранятся все ссылки
+    std::vector<QJsonObject> allFiles;// Вектор, в котором хранятся все ссылки
+    QString Path;
     ~Paint();
 
 private:

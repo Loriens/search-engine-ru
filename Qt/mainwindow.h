@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QString>
+#include <QJsonObject>
 
 namespace Ui {
 class MainWindow;
@@ -14,14 +15,14 @@ class MainWindow : public QMainWindow
 
 public:
     explicit MainWindow(QWidget *parent = 0);
-    std::vector<QString> all_sites; // Вектор, в котором хранятся НЕ повторяющиеся ссылки
+    std::vector<QJsonObject> all_files; // Вектор, в котором хранятся все файлы ссылки
     QString startFolderPath;
     QString domenName;
     ~MainWindow();
 
 private slots:
-    QString readToFile(const QString &filePath);
-    void readFile(const QString &folderPath);
+    QString readFile(const QString &filePath);
+    void printFile(const QString &folderPath);
     void on_actionRead_dir_triggered();
 
 private:

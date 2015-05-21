@@ -7,6 +7,7 @@
 #include <QTextStream>
 #include <QRegExp>
 #include <vector>
+#include <QJsonObject>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -21,7 +22,7 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-QString MainWindow::readToFile(const QString &filePath)
+QString MainWindow::readFile(const QString &filePath)
 {
     QFile ourFile(filePath);
 
@@ -38,8 +39,8 @@ QString MainWindow::readToFile(const QString &filePath)
     return buffer;
 }
 
-void MainWindow::readFile(const QString &folderPath) {
-    ui->textBrowser->setText(readToFile(folderPath));
+void MainWindow::printFile(const QString &folderPath) {
+    ui->textBrowser->setText(readFile(folderPath));
 
     QFile ourFile(folderPath);
     QString buffer;
@@ -50,8 +51,13 @@ void MainWindow::readFile(const QString &folderPath) {
     }
     QTextStream stream(&ourFile);
 
+    QString name_path = stream.readLine();
+    stream.readLine();
+
     while(!stream.atEnd()) {
-        all_sites.push_back(stream.readLine());
+        QJsonDocument jsdoc = QJsonDocument::fromJson(stream.readLine().toUtf8());
+        all_files.push_back(jsdoc.object());
+        stream.readLine();
     }
 
     ourFile.flush();
@@ -60,7 +66,8 @@ void MainWindow::readFile(const QString &folderPath) {
     // Закрываем файл. Очень важно!
 
     Paint *window = new Paint(this);
-    window->allSites = this->all_sites;
+    window->allFiles = this->all_files;
+    window->Path = name_path;
     window->show();
 }
 
@@ -69,5 +76,5 @@ void MainWindow::on_actionRead_dir_triggered()
     Dialog *window = new Dialog(this);
     window->show();
 
-    connect(window, SIGNAL(filePath(QString)), this, SLOT(readFile(QString)));
+    connect(window, SIGNAL(filePath(QString)), this, SLOT(printFile(QString)));
 }

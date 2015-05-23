@@ -6,12 +6,40 @@
 #include <boost/property_tree/json_parser.hpp>
 #include "head.h"
 #include "sha1.h"
+#include "pbfile.pb.h"
 
 using namespace std;
 using boost::property_tree::ptree;
 using boost::property_tree::write_json;
 
+struct Fileinfo {
+	std::string path;
+	std::string hash;
+	int size;
+	std::string flag = "NEW";
+};
+
+void savepbuf(std::string filename, std::vector<Fileinfo> & vec_finfo) {
+	nsofdir::ArrFilep flist;
+	nsofdir::Filep * file_entry;
+	std::ofstream output(filename, std::ofstream::binary);
+	for (Fileinfo it : vec_finfo) {
+		//Запись, просто по сделанным методам протобафа
+		file_entry = flist.add_filep();
+		file_entry->set_filepath(it.path);
+		file_entry->set_size(it.size);
+		file_entry->set_mdsixhash(it.hash);
+
+	}
+	//Вывод файла
+	flist.PrintDebugString();
+	//Записываем в output файл
+	flist.SerializeToOstream(&output);
+	output.close();
+}
+
 void search_engine(boost::filesystem::path main_path, bool first_call, string name_file) {	
+	vector<Fileinfo> vec_list;
 	if (boost::filesystem::exists(main_path)) {
 
 		ofstream fileout; // Поток для вывода в файл
@@ -35,6 +63,8 @@ void search_engine(boost::filesystem::path main_path, bool first_call, string na
 					
 					string content; // Все данные из файла
 					string buff;
+					
+					Fileinfo it;
 					while (getline(filein, buff)) { // Читаем файл по строчке с помощью цикла
 						content += buff;
 					}
@@ -46,6 +76,10 @@ void search_engine(boost::filesystem::path main_path, bool first_call, string na
 					file.put("Name", der_iter->path().filename().string());
 					file.put("Size", boost::filesystem::file_size(der_iter->path()));
 					file.put("Hash", hash_sha1(content.c_str(), content.length()));
+					it.path = der_iter->path().filename().string();
+					it.size = boost::filesystem::file_size(der_iter->path()));
+					it.hash = hash_sha1(content.c_str(), content.length()));
+					vec_list.push_back(it)
 					ostringstream buf;
 					write_json(buf, file, false);
 					string json = buf.str(); // Строка в формате JSON
@@ -70,7 +104,7 @@ void search_engine(boost::filesystem::path main_path, bool first_call, string na
 				}
 			}
 		}
-
+		savepbuf("flist_copy.pbuf", vec_list)
 		fileout.close(); // Закрываем файл
 
 		if (first_call) {
